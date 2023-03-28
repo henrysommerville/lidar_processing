@@ -37,7 +37,7 @@ This package was created for a mobile robot project using ROS and Python, as a s
 '''
     
     cd ~/catkin_ws/src
-    git clone https://github.com/<your-username>/lidar_processing.git
+    git clone https://github.com/henrysommerville/lidar_processing
   
 '''
 
@@ -66,6 +66,6 @@ This package was created for a mobile robot project using ROS and Python, as a s
 
 '''
   
-    ./lidar_processing_launcher.sh "/path/to/bag_file.bag"
+    ./lidar_processing_launcher.sh "</path/to/bag_file.bag>"
   
 '''
