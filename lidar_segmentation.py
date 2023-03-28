@@ -10,7 +10,19 @@ from sensor_msgs import point_cloud2
 
 #comment
 class LidarProcessor:
+ 
     def __init__(self):
+        """Initialize a `lidar_processor` ROS node and create subscribers/publishers.
+
+        This function initializes a ROS node with the name `lidar_processor` and creates
+        subscribers to listen for messages on the topic `/livox/lidar` of type `PointCloud2`.
+        It also creates publishers to publish messages to the topics `/ground` and `/nonground`
+        of type `PointCloud2`.
+
+        The function also sets the default values for the RANSAC algorithm parameters, `max_distance`
+        and `num_iterations`.
+
+        """
         # Initialize ROS node
         rospy.init_node('lidar_processor')
 
@@ -23,7 +35,17 @@ class LidarProcessor:
         self.max_distance = 0.2
         self.num_iterations = 75
 
+
+
     def lidar_callback(self, msg):
+        """Callback function for processing incoming LiDAR data.
+
+        Args:
+            msg (PointCloud2): PointCloud2 message containing LiDAR data.
+
+        Returns:
+            None
+        """
         # Extract point cloud data as numpy array
         point_cloud = np.array([[point[0], point[1], point[2]] for point in point_cloud2.read_points(msg)])
 
@@ -35,6 +57,15 @@ class LidarProcessor:
         self.publish_points(self.nonground_publisher, nonground_points, msg.header)
 
     def segment_lidar_data(self, point_cloud):
+        """Segment a given point cloud into ground and non-ground points using RANSAC algorithm.
+
+        Args:
+            point_cloud (ndarray): 2D numpy array of shape (N, 3) representing a point cloud, where each row contains (x, y, z) coordinates of a point.
+
+        Returns:
+            tuple: A tuple of two lists of points. The first list contains the ground points (N1 x 3), and the second list contains the non-ground points (N2 x 3), where N1 + N2 = N. The points are represented as lists of [x, y, z] coordinates.
+
+        """
         # Segment ground points using RANSAC algorithm
         # Assume that ground is the largest plane in the scene
         plane_model, inliers = self.ransac_segmentation(point_cloud)
@@ -48,6 +79,18 @@ class LidarProcessor:
         return ground_points.tolist(), non_ground_points.tolist()
 
     def ransac_segmentation(self, points):
+        """
+        Performs RANSAC (Random Sample Consensus) segmentation to identify the ground plane in a point cloud.
+
+        Args:
+            points (numpy.ndarray): An Nx3 array containing the x, y, and z coordinates of N points in the point cloud.
+
+        Returns:
+            tuple: A tuple containing the plane model and inlier points. The plane model is a 1x4 numpy array containing
+            the coefficients of the plane equation in the form ax + by + cz + d = 0, where (a, b, c) is the normal vector
+            to the plane and d is the distance from the origin to the plane. The inlier points are a boolean array of length N
+            indicating which points in the input point cloud are inliers.
+        """
         best_model = None
         best_inliers = None
         best_num_inliers = 0
@@ -78,6 +121,16 @@ class LidarProcessor:
     
 
     def publish_points(self, publisher, points, header):
+        """Publish a given point cloud as a PointCloud2 message.
+
+        Args:
+            publisher (PointCloud2): PointCloud2 message publisher.
+            points (numpy.ndarray): 2D numpy array of shape (N, 3) representing a point cloud, where each row contains (x, y, z) coordinates of a point.
+            header (Header): Header of the point cloud message.
+
+        Returns:
+            None
+        """
         # Create point cloud message
         point_cloud = PointCloud2()
         point_cloud.header = header
